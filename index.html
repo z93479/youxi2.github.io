@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>知识消消乐 · 结核知识赛</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #fff9ef;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            padding: 0 8px 10px;
+            margin: 0;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            color: #4b3a2b;
+            text-shadow: 2px 2px 0 #f0dbb0, 4px 4px 0 rgba(0,0,0,0.05);
+            letter-spacing: 2px;
+            margin-top: 2px;
+            margin-bottom: 4px;
+            font-weight: 800;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        h1 span {
+            font-size: 1.3rem !important;
+            display: block;
+        }
+
+        .game-wrapper {
+            background: rgba(255, 245, 230, 0.7);
+            border-radius: 30px;
+            padding: 8px 10px 15px;
+            box-shadow: 0 12px 15px rgba(150, 120, 80, 0.15);
+            max-width: 400px;
+            width: 100%;
+            margin-top: 0;
+            position: relative;
+        }
+
+        .score-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #ffe9cf;
+            padding: 5px 15px;
+            border-radius: 35px;
+            margin-bottom: 8px;
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: #3f3322;
+            box-shadow: inset 0 2px 4px #ecdbbd, 0 4px 0 #d2b48c;
+        }
+
+        .score-box {
+            background: #4f3f2f;
+            color: #fdf7e7;
+            padding: 4px 15px;
+            border-radius: 30px;
+            font-size: 1.6rem;
+            font-family: monospace;
+            box-shadow: 0 3px 0 #2f241b;
+        }
+
+        .message-box {
+            background: #b6d7b0;
+            color: #1e4b2b;
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 1.2rem;
+            border: 2px solid #7aa86a;
+            white-space: nowrap;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            aspect-ratio: 400 / 600;
+            background: #b7e0ff;
+            border-radius: 25px;
+            box-shadow: 0 8px 0 #6b8fa0, 0 12px 12px rgba(0,0,0,0.1);
+            margin: 0 0 8px;
+            touch-action: none;
+            cursor: pointer;
+        }
+
+        /* 胜利信息 - 显示在游戏上方 */
+        .win-message-container {
+            background: #e3ffcf;
+            border: 4px solid #9fcb8b;
+            border-radius: 40px;
+            padding: 12px 15px;
+            margin-bottom: 12px;
+            text-align: center;
+            box-shadow: 0 6px 0 #6b8e4c;
+        }
+
+        .win-message-text {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #27633e;
+            line-height: 1.3;
+        }
+
+        /* 重新开始按钮容器 - 通关后显示 */
+        .restart-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+            margin-bottom: 5px;
+        }
+
+        /* 开始按钮浮层 */
+        .start-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(255, 245, 225, 0.95);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            padding: 15px;
+        }
+
+        .start-card {
+            background: #fffef7;
+            max-width: 400px;
+            width: 100%;
+            padding: 40px 25px;
+            border-radius: 60px;
+            box-shadow: 0 20px 0 #d2b48c, 0 25px 35px rgba(90, 60, 30, 0.3);
+            text-align: center;
+            border: 5px solid #ffe3b5;
+        }
+
+        .start-title {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #2f4b2f;
+            margin-bottom: 15px;
+            letter-spacing: 3px;
+        }
+
+        .start-sub {
+            font-size: 1.8rem;
+            color: #aa4e1c;
+            margin-bottom: 30px;
+            background: #fff0bb;
+            padding: 12px 20px;
+            border-radius: 50px;
+            font-weight: 600;
+        }
+
+        .big-start-btn {
+            background: #ffcf8a;
+            border: none;
+            font-size: 2.8rem;
+            font-weight: 700;
+            padding: 25px 20px;
+            border-radius: 80px;
+            color: #2d461d;
+            box-shadow: 0 12px 0 #b87c3a;
+            transition: 0.05s linear;
+            cursor: pointer;
+            border: 4px solid #ffbc5c;
+            width: 100%;
+            letter-spacing: 4px;
+        }
+
+        .big-start-btn:active {
+            transform: translateY(8px);
+            box-shadow: 0 4px 0 #b87c3a;
+        }
+
+        /* 答题浮层 */
+        .quiz-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(255, 245, 225, 0.9);
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 15px;
+        }
+
+        .quiz-card {
+            background: #fffef7;
+            max-width: 400px;
+            width: 100%;
+            padding: 25px 18px;
+            border-radius: 50px;
+            box-shadow: 0 15px 0 #d2b48c, 0 20px 30px rgba(90, 60, 30, 0.25);
+            text-align: center;
+            border: 4px solid #ffe3b5;
+        }
+
+        .quiz-question {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #2f4b2f;
+            margin-bottom: 25px;
+            line-height: 1.4;
+            background: #e1f3d6;
+            padding: 15px 12px;
+            border-radius: 40px;
+            word-break: break-word;
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 5px;
+        }
+
+        .quiz-btn {
+            background: #ffe0b9;
+            border: none;
+            font-size: 1.7rem;
+            font-weight: 700;
+            padding: 14px 8px;
+            border-radius: 40px;
+            color: #3d2f1b;
+            box-shadow: 0 6px 0 #b68f66;
+            transition: 0.05s linear;
+            cursor: pointer;
+            border: 2px solid #ffd19b;
+        }
+
+        .quiz-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #b68f66;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .reset-btn {
+            background: #dfc9a3;
+            border: none;
+            font-size: 1.6rem;
+            font-weight: 600;
+            padding: 10px 35px;
+            border-radius: 40px;
+            color: #3f3322;
+            box-shadow: 0 5px 0 #b29263;
+            cursor: pointer;
+            transition: 0.07s linear;
+            border: 1px solid #ffeac2;
+        }
+
+        .reset-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #b29263;
+        }
+
+        footer {
+            margin-top: 8px;
+            font-size: 1rem;
+            color: #ae9b81;
+            font-weight: 500;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>📚 知识消消乐<br><span>FlappyBird · 结核问答</span></h1>
+    <div class="game-wrapper">
+        <!-- 胜利信息显示在游戏上方，分数面板上面 -->
+        <div id="winMessageContainer" class="win-message-container hidden">
+            <div class="win-message-text">🎉 恭喜你挑战成功！<br>满分100分达成 🎉</div>
+        </div>
+
+        <div class="score-panel">
+            <span class="message-box" id="statusMsg">⏸ 点击开始</span>
+            <span class="score-box" id="scoreDisplay">0</span>
+        </div>
+
+        <canvas id="gameCanvas" width="400" height="600"></canvas>
+
+        <!-- 通关后显示重新开始按钮（在游戏下方） -->
+        <div id="winRestartContainer" class="restart-container hidden">
+            <button id="winRestartBtn" class="reset-btn">🔄 重新开始游戏</button>
+        </div>
+
+        <!-- 常规重新开始按钮（平时显示） -->
+        <div id="normalRestartContainer" class="restart-container">
+            <button id="normalRestartBtn" class="reset-btn">🔄 重新开始</button>
+        </div>
+    </div>
+
+    <!-- 开始按钮浮层 -->
+    <div id="startOverlay" class="start-overlay">
+        <div class="start-card">
+            <div class="start-title">FlappyBird</div>
+            <div class="start-sub">结核病防治 · 知识闯关</div>
+            <button class="big-start-btn" id="startGameBtn">▶ 开始游戏</button>
+        </div>
+    </div>
+
+    <!-- 答题浮层 -->
+    <div id="quizOverlay" class="quiz-overlay hidden">
+        <div class="quiz-card">
+            <div class="quiz-question" id="quizQuestion">加载中...</div>
+            <div class="quiz-options" id="quizOptions"></div>
+        </div>
+    </div>
+
+    <footer>全面行动 · 全力投入 · 全民参与 · 终结结核</footer>
+
+    <script>
+        (function() {
+            const QUESTION_BANK = [
+                { question: "结核病主要由什么引起？", options: ["结核杆菌", "流感病毒", "肺炎球菌", "真菌"], correct: 0 },
+                { question: "结核病最常侵犯哪个器官？", options: ["肺部", "肝脏", "肾脏", "大脑"], correct: 0 },
+                { question: "结核病的主要传播途径是？", options: ["飞沫传播", "血液传播", "食物传播", "蚊虫叮咬"], correct: 0 },
+                { question: "预防结核病的疫苗是？", options: ["卡介苗", "乙肝疫苗", "麻疹疫苗", "百白破"], correct: 0 },
+                { question: "咳嗽咳痰超过几周应怀疑结核？", options: ["1周", "2周", "3周", "4周"], correct: 1 },
+                { question: "佩戴口罩的主要作用？", options: ["阻断传播", "保暖", "装饰", "防尘"], correct: 0 },
+                { question: "保持室内通风的目的是？", options: ["减少病菌", "降低温度", "增加氧气", "减少灰尘"], correct: 0 },
+                { question: "增强免疫力的重要方式？", options: ["均衡营养", "熬夜", "吸烟", "饮酒"], correct: 0 },
+                { question: "结核病能治愈吗？", options: ["规范治疗可治愈", "无法治愈", "只靠休息", "靠偏方"], correct: 0 },
+                { question: "哪类人群更容易感染结核？", options: ["免疫力低下者", "运动员", "青少年", "户外工作者"], correct: 0 }
+            ];
+
+            let availableQuestions = [];
+
+            let canvas = document.getElementById('gameCanvas');
+            let ctx = canvas.getContext('2d');
+
+            let bird = {
+                x: 70,
+                y: 250,
+                width: 26,
+                height: 26,
+                gravity: 0.25,
+                lift: -6,
+                velocity: 0
+            };
+
+            let pipes = [];
+            let pipeWidth = 50;
+            let pipeGap = 200;
+            let frameCount = 0;
+            let gameActive = false;
+            let score = 0;
+            const MAX_SCORE = 100;
+
+            let quizLock = false;
+            let currentCollidePipeId = null;
+            let gameFinished = false;
+
+            let scoreDisplay = document.getElementById('scoreDisplay');
+            let statusMsg = document.getElementById('statusMsg');
+            let quizOverlay = document.getElementById('quizOverlay');
+            let quizQuestion = document.getElementById('quizQuestion');
+            let quizOptions = document.getElementById('quizOptions');
+            let winMessageContainer = document.getElementById('winMessageContainer');
+            let winRestartContainer = document.getElementById('winRestartContainer');
+            let normalRestartContainer = document.getElementById('normalRestartContainer');
+            
+            let startOverlay = document.getElementById('startOverlay');
+            let startGameBtn = document.getElementById('startGameBtn');
+            let normalRestartBtn = document.getElementById('normalRestartBtn');
+            let winRestartBtn = document.getElementById('winRestartBtn');
+
+            // 重置游戏状态
+            function resetGameState() {
+                bird.y = 250;
+                bird.velocity = 0;
+                pipes = [];
+                frameCount = 0;
+                gameActive = false;
+                gameFinished = false;
+                quizLock = false;
+                currentCollidePipeId = null;
+                score = 0;
+                updateScore();
+                availableQuestions = QUESTION_BANK.map((q, index) => ({ ...q, used: false, originalIndex: index }));
+                
+                // 隐藏所有胜利相关元素
+                winMessageContainer.classList.add('hidden');
+                winRestartContainer.classList.add('hidden');
+                normalRestartContainer.classList.remove('hidden');
+                
+                quizOverlay.classList.add('hidden');
+                startOverlay.classList.remove('hidden');
+                statusMsg.textContent = '⏸ 点击开始';
+            }
+
+            // 开始游戏
+            function startGame() {
+                gameActive = true;
+                gameFinished = false;
+                startOverlay.classList.add('hidden');
+                statusMsg.textContent = '🐦 点击屏幕飞翔';
+                
+                // 确保胜利信息隐藏
+                winMessageContainer.classList.add('hidden');
+                winRestartContainer.classList.add('hidden');
+                normalRestartContainer.classList.remove('hidden');
+            }
+
+            // 完全重置
+            function fullReset() {
+                resetGameState();
+            }
+
+            function addPoints(p) {
+                if (!gameActive || gameFinished) return;
+                
+                score = Math.min(score + p, MAX_SCORE);
+                updateScore();
+                
+                // 检查是否达到满分
+                if (score >= MAX_SCORE && !gameFinished) {
+                    gameActive = false;
+                    gameFinished = true;
+                    
+                    // 显示胜利信息在游戏上方
+                    winMessageContainer.classList.remove('hidden');
+                    
+                    // 在游戏下方显示重新开始按钮（隐藏常规按钮，显示胜利专用按钮）
+                    normalRestartContainer.classList.add('hidden');
+                    winRestartContainer.classList.remove('hidden');
+                    
+                    statusMsg.textContent = '🎓 满分通关!';
+                    
+                    // 如果答题浮层开着，关闭它
+                    quizOverlay.classList.add('hidden');
+                    quizLock = false;
+                }
+            }
+
+            function updateScore() {
+                scoreDisplay.textContent = score;
+            }
+
+            function getRandomUnusedQuestion() {
+                let unused = availableQuestions.filter(q => !q.used);
+                if (unused.length === 0) {
+                    availableQuestions.forEach(q => q.used = false);
+                    unused = availableQuestions;
+                }
+                let randomIndex = Math.floor(Math.random() * unused.length);
+                let selected = unused[randomIndex];
+                selected.used = true;
+                return selected;
+            }
+
+            function showQuizForPipe(pipeId) {
+                // 如果已经通关，不再弹出题目
+                if (gameFinished) return;
+                if (quizLock) return;
+                if (!gameActive) return;
+
+                // 暂停游戏
+                gameActive = false;
+                quizLock = true;
+                currentCollidePipeId = pipeId;
+
+                let q = getRandomUnusedQuestion();
+
+                quizQuestion.textContent = q.question;
+                quizOptions.innerHTML = '';
+                
+                q.options.forEach((opt, idx) => {
+                    let btn = document.createElement('button');
+                    btn.className = 'quiz-btn';
+                    btn.textContent = opt;
+                    btn.dataset.idx = idx;
+                    
+                    btn.addEventListener('click', function handler(e) {
+                        let selectedIdx = parseInt(e.target.dataset.idx);
+                        let isCorrect = (selectedIdx === q.correct);
+                        
+                        // 先关闭答题浮层
+                        quizOverlay.classList.add('hidden');
+                        
+                        if (isCorrect) {
+                            addPoints(10); // 答对加10分
+                            statusMsg.textContent = '✅ +10 分!';
+                        } else {
+                            statusMsg.textContent = '❌ 答错, 继续加油';
+                        }
+                        
+                        // 移除撞到的柱子
+                        let index = pipes.findIndex(p => p.id === pipeId);
+                        if (index !== -1) {
+                            pipes.splice(index, 1);
+                        }
+                        
+                        // 解锁
+                        quizLock = false;
+                        currentCollidePipeId = null;
+                        
+                        // 如果没有通关，恢复游戏运行
+                        if (!gameFinished) {
+                            gameActive = true;
+                        }
+                    });
+                    
+                    quizOptions.appendChild(btn);
+                });
+
+                // 显示答题浮层
+                quizOverlay.classList.remove('hidden');
+            }
+
+            function addPipe() {
+                // 如果已经通关，不再生成新管道
+                if (gameFinished) return;
+                
+                let minTop = 80;
+                let maxTop = 380;
+                let top = Math.random() * (maxTop - minTop) + minTop;
+                let id = 'pipe-' + Date.now() + '-' + Math.random();
+                pipes.push({
+                    id: id,
+                    x: canvas.width,
+                    top: top,
+                    bottom: top + pipeGap,
+                    passed: false,
+                });
+            }
+
+            function rectCollide(r1, r2) {
+                return !(r2.x > r1.x + r1.w || r2.x + r2.w < r1.x ||
+                         r2.y > r1.y + r1.h || r2.y + r2.h < r1.y);
+            }
+
+            function update() {
+                if (!gameActive || gameFinished) return;
+
+                bird.velocity += bird.gravity;
+                bird.y += bird.velocity;
+
+                if (bird.y < 5) bird.y = 5;
+                if (bird.y > canvas.height - bird.height - 5) bird.y = canvas.height - bird.height - 5;
+
+                for (let i = pipes.length - 1; i >= 0; i--) {
+                    let p = pipes[i];
+                    p.x -= 2.2;
+
+                    if (p.x + pipeWidth < 0) {
+                        pipes.splice(i, 1);
+                        continue;
+                    }
+
+                    if (!p.passed && bird.x > p.x + pipeWidth) {
+                        p.passed = true;
+                        addPoints(10); // 越过障碍加10分（从5分改为10分）
+                        statusMsg.textContent = '🎯 越过障碍 +10';
+                    }
+
+                    // 只有在没有答题锁定时才检测碰撞
+                    if (!quizLock && !currentCollidePipeId && !gameFinished) {
+                        let birdRect = { x: bird.x, y: bird.y, w: bird.width, h: bird.height };
+                        let topPipeRect = { x: p.x, y: 0, w: pipeWidth, h: p.top };
+                        let bottomPipeRect = { x: p.x, y: p.bottom, w: pipeWidth, h: canvas.height - p.bottom };
+
+                        if (rectCollide(birdRect, topPipeRect) || rectCollide(birdRect, bottomPipeRect)) {
+                            showQuizForPipe(p.id);
+                            break; // 一次只处理一个碰撞
+                        }
+                    }
+                }
+
+                frameCount++;
+                if (frameCount % 85 === 0 && !gameFinished) {
+                    addPipe();
+                }
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                let grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                grad.addColorStop(0, '#d4ecff');
+                grad.addColorStop(1, '#b0d4f0');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                pipes.forEach(p => {
+                    ctx.fillStyle = '#3d8c40';
+                    ctx.shadowColor = '#204d20';
+                    ctx.shadowBlur = 8;
+                    ctx.fillRect(p.x, 0, pipeWidth, p.top);
+                    ctx.fillRect(p.x, p.bottom, pipeWidth, canvas.height - p.bottom);
+                    ctx.shadowBlur = 4;
+                    ctx.strokeStyle = '#e3ffb0';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(p.x, 0, pipeWidth, p.top);
+                    ctx.strokeRect(p.x, p.bottom, pipeWidth, canvas.height - p.bottom);
+                });
+                ctx.shadowBlur = 0;
+
+                // 画鸟
+                ctx.fillStyle = '#ffd966';
+                ctx.shadowColor = '#b37b48';
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+                ctx.ellipse(bird.x + bird.width/2, bird.y + bird.height/2, bird.width/2, bird.height/2, 0, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = '#f0b300';
+                ctx.beginPath();
+                ctx.ellipse(bird.x + 16, bird.y + 9, 5, 5, 0, 0, Math.PI*2);
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.ellipse(bird.x + 18, bird.y + 7, 2.5, 2.5, 0, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = '#f5821f';
+                ctx.beginPath();
+                ctx.moveTo(bird.x + 22, bird.y + 11);
+                ctx.lineTo(bird.x + 28, bird.y + 13);
+                ctx.lineTo(bird.x + 22, bird.y + 16);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+
+            function gameLoop() {
+                update();
+                draw();
+                requestAnimationFrame(gameLoop);
+            }
+
+            function flap() {
+                if (!gameActive || gameFinished) return;
+                bird.velocity = bird.lift;
+                statusMsg.textContent = '💨 扑棱';
+            }
+
+            canvas.addEventListener('click', (e) => {
+                e.preventDefault();
+                flap();
+            });
+
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                flap();
+            });
+
+            // 开始游戏按钮
+            startGameBtn.addEventListener('click', startGame);
+            
+            // 常规重新开始按钮
+            normalRestartBtn.addEventListener('click', fullReset);
+            
+            // 通关后的重新开始按钮
+            winRestartBtn.addEventListener('click', fullReset);
+
+            // 初始化
+            resetGameState();
+            gameLoop();
+        })();
+    </script>
+</body>
+</html>
